@@ -1,0 +1,71 @@
+; Copyright (c) uib gmbh (www.uib.de)
+; This sourcecode is owned by uib gmbh
+; and published under the Terms of the General Public License.
+; credits: http://www.opsi.org/en/credits/
+
+[Actions]
+requiredWinstVersion >= "4.11.3.3"
+
+include_append "%ScriptPath%\check_inno_exitcode.opsiscript"
+
+DefVar $LogDir$
+DefVar $ProductId$
+;DefVar $UseCustomDir$
+DefVar $InstallDir$
+DefVar $KeepVersion$	
+;DefVar $CustomPath$
+
+DefVar $LicenseRequired$
+DefVar $LicensePool$
+DefVar $PrettyName$
+
+DefStringList $directory_folders$
+DefStringList $dirty_directory_folders$
+
+
+Set $LogDir$ 				= "%SystemDrive%\tmp"
+;Set $UseCustomDir$ 	= GetProductProperty("use_custom_installation_directory", "False")
+;Set $InstallDir$ 		= GetProductProperty("custom_installation_directory", "%ProgramFiles64Dir%\R\")
+
+;if (($UseCustomDir$ = "True") AND ($InstallDir$ = ''))
+  Set $InstallDir$ = "%ProgramFiles64Dir%\R\"
+;endif
+
+;just to make sure everything is removed
+Set $KeepVersion$ 	= "remove all"
+
+; ----------------------------------------------------------------; ----------------------------------------------------------------
+; - Please check the following values                             -
+; ----------------------------------------------------------------
+Set $ProductId$               = "r"
+Set $LicenseRequired$         = "false"
+Set $LicensePool$             = "p_" + $ProductId$
+; ----------------------------------------------------------------
+
+comment "Show product picture"
+ShowBitmap "%ScriptPath%\" + $ProductId$ + ".png" $PrettyName$
+
+comment "Start uninstall sub section"
+Sub "%ScriptPath%\delsub.opsiscript"
+
+if $LicenseRequired$ = "true"
+   comment "Licensing required, free license used"
+   Sub_free_license
+endif
+
+;-----------------------------------------------------
+
+[Sub_free_license]
+comment "License management is enabled and will be used"
+
+comment "Trying to free license used for the product"
+DefVar $result$
+Set $result$ = FreeLicense($LicensePool$)
+; If there is an assignment of a license pool to the product, it is possible to use
+; Set $result$ = FreeLicense("", $ProductId$)
+;
+; If there is an assignment of a license pool to a windows software id, it is possible to use
+; DefVar $WindowsSoftwareId$
+; $WindowsSoftwareId$ = "..."
+; set $result$ = FreeLicense("", "", $WindowsSoftwareId$)
+

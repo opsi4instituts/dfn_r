@@ -1,0 +1,191 @@
+; ----------------------------------------------------------------
+; Copyright (c) uib gmbh (www.uib.de)
+; This sourcecode is owned by uib
+; and published under the Terms of the General Public License.
+; credits: http://www.opsi.org/en/credits/
+; ----------------------------------------------------------------
+
+;****************************************
+; SETUPTYPE      inno
+;****************************************
+; PRODUCTID      r
+; SETUPFILE      R-3.1.2-win.exe
+;****************************************
+; LICENSE        false     
+; PRODUCTDESC    R is a free software environment for statistical computing and graphics.
+
+; PRODUCTNAME    R for Windows 3.2.0
+; PRODUCTSIZE    326 MB
+; PRODUCTVER     3.2.0
+;****************************************
+; SETUPSCRIPT    setup.opsiscript
+; UNINSSCRIPT    uninstall.opsiscript
+;****************************************
+; MSIID          
+; USE-MST        
+; INSTALLDIR     {code:UserPF}\R\R-3.1.2
+;****************************************
+; TIMESTAMP      19.02.2015 12:49:54
+;****************************************
+[Initial]
+setLogLevel=6
+;  Log Errors in Logfile but don't abort:
+ExitOnError=False
+; Show syntax errors in the script:
+ScriptErrorMessages=on
+; Dont trace step by step through the script:
+TraceMode=off
+; let started programs run in front of the winst window
+StayOnTop=False
+ 
+
+[Actions]
+requiredWinstVersion >= "4.11.3.3"
+;setLogLevel=9
+
+DefVar $LogDir$
+DefVar $ProductId$ 
+DefVar $LicenseRequired$
+DefVar $LicensePool$
+DefVar $MinimumSpace$
+DefVar $PrettyName$
+DefVar $Version_3$
+DefVar $Version_2$
+DefVar $Setupfile_3$ 
+DefVar $Setupfile_2$ 
+DefVar $Params$
+DefVar $INST_SystemType$
+DefVar $version$
+DefVar $architecture$
+;DefVar $UseCustomDir$
+;DefVar $CustomDir$
+DefVar $InstallDir$
+DefVar $KeepVersion$
+DefVar $LicenseKey$
+;DefVar $CustomPackageInstallDir$	
+;DefVar $UseCustomPackageInstallDir$	
+
+Set $LogDir$ = "%SystemDrive%\tmp"
+
+include_append "%ScriptPath%\check_inno_exitcode.opsiscript"
+
+; ----------------------------------------------------------------
+; $ProductId$ is the name of the product in opsi, only lower letters, no umlauts, no white spaces, use '-' as a seperator
+Set $ProductId$      		= "r"
+Set $LicenseRequired$ 	= "false"
+Set $LicensePool$    		= "p_" + $ProductId$
+Set $MinimumSpace$    	= "326 MB"
+; ----------------------------------------------------------------
+Set $PrettyName$				= "R"
+Set $Version_3$	  			= "3.2.1"
+Set $Version_2$					= "2.15.3"
+Set $Setupfile_3$       = $PrettyName$ + "-" + $Version_3$ + "-win.exe"
+Set $Setupfile_2$       = $PrettyName$ + "-" + $Version_2$ + "-win.exe"
+Set $Params$						= "/VERYSILENT /COMPONENTS=main"
+
+Set $INST_SystemType$ 	= GetSystemType
+Set $version$				  	= GetProductProperty("version", "3.x")
+Set $architecture$			= GetProductProperty("architecture", "auto")
+;Set $UseCustomDir$			= GetProductProperty("use_custom_installation_directory", "False")
+;Set $CustomDir$ 				= GetProductProperty("custom_installation_directory", "%ProgramFiles64Dir%\R\")
+Set $KeepVersion$				= GetProductProperty("keep_Version", "keep all")
+;Set $UseCustomPackageInstallDir$			= GetProductProperty("use_custom_package_install_directory", "False")
+;Set $CustomPackageInstallDir$ 				= GetProductProperty("custom_package_install_directory", alsfasdf "%Username%\R\")
+
+;if ($UseCustomDir$ = "True")
+;  Set $InstallDir$ = $CustomDir$ 	
+;  if ( (not ($InstallDir$ = '')) AND (not ($InstallDir$ = "%ProgramFiles64Dir%\R\")))
+;    Set $Params$ = $Params$ + ",'/DIR=\"$CustomDir$	\"'"
+;  endif
+;else
+  Set $InstallDir$ 	= "%ProgramFiles64Dir%\R\"
+;endif
+
+if not(HasMinimumSpace ("%SystemDrive%", $MinimumSpace$))
+  LogError "Not enough space on %SystemDrive%, " + $MinimumSpace$ + " on drive %SystemDrive% needed for " + $ProductId$
+  isFatalError "No Space"
+  ; Stop process and set installation status to failed
+else
+  comment "Show product picture"
+  ShowBitmap "%ScriptPath%\" + $ProductId$ + ".png" $PrettyName$ + " " + $Version_3$
+
+  comment "Start uninstall sub section"
+  Sub "%ScriptPath%\delsub.opsiscript"
+
+  Message "Installing " + $ProductId$ + " ..."
+	
+  if $LicenseRequired$ = "true"
+    comment "Licensing required, reserve license and get license key"
+    Sub_get_licensekey
+  endif
+	
+  if (($INST_SystemType$ = "x86 System") and ($architecture$ = "auto")) or ($architecture$ = "both") or ($architecture$ = "32bit")
+	  Set $Params$ = $Params$ + ",i386"
+	endif
+	
+	if (($INST_SystemType$ = "64 Bit System") and ($architecture$ = "auto")) or ($architecture$ = "both") or ($architecture$ = "64bit")
+	  Set $Params$ = $Params$ + ",x64"
+	endif
+	
+	Set $Params$ = $Params$ + ",translations"
+	  
+	;comment "Start setup program"
+  ChangeDirectory "%SCRIPTPATH%"
+  if ($version$ = "2.x") or  ($version$ = "both")
+		Winbatch_install_inno_2
+		Sub_check_exitcode
+	endif
+	if ($version$ = "3.x") or ($version$ = "both")
+	   Winbatch_install_inno_3
+	   Sub_check_exitcode
+	endif	
+   	
+endif
+
+; ----------------------------------------------------------------
+; install sections
+; ----------------------------------------------------------------
+[Winbatch_install_inno_2]
+"%ScriptPath%\$Setupfile_2$" + $Params$
+
+[Winbatch_install_inno_3]
+"%ScriptPath%\$Setupfile_3$" + $Params$
+
+; ----------------------------------------------------------------
+[Sub_get_licensekey]
+if opsiLicenseManagementEnabled
+   comment "License management is enabled and will be used"
+
+   comment "Trying to get a license key"
+   Set $LicenseKey$ = demandLicenseKey ($LicensePool$)
+   ; If there is an assignment of exactly one licensepool to the product the following call is possible:
+   ; Set $LicenseKey$ = demandLicenseKey ("", $ProductId$)
+   ;
+   ; If there is an assignment of a license pool to a windows software id, it is possible to use:
+   ; DefVar $WindowsSoftwareId$
+   ; $WindowsSoftwareId$ = "..."
+   ; Set $LicenseKey$ = demandLicenseKey ("", "", $WindowsSoftwareId$)
+
+   DefVar $ServiceErrorClass$
+   set $ServiceErrorClass$ = getLastServiceErrorClass
+   comment "Error class: " + $ServiceErrorClass$
+   
+   if $ServiceErrorClass$ = "None"
+      comment "Everything fine, we got the license key '" + $LicenseKey$ + "'"
+   else
+      if $ServiceErrorClass$ = "LicenseConfigurationError"
+         LogError "Fatal: license configuration must be corrected"
+         LogError getLastServiceErrorMessage
+         isFatalError
+      else 
+         if $ServiceErrorClass$ = "LicenseMissingError"
+            LogError "Fatal: required license is not supplied"
+            isFatalError
+         endif
+      endif
+   endif
+else
+   LogError "Fatal: license required, but license management not enabled"
+   isFatalError
+endif
+

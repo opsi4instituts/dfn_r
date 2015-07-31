@@ -1,0 +1,93 @@
+; Copyright (c) uib gmbh (www.uib.de)
+; This sourcecode is owned by uib gmbh
+; and published under the Terms of the General Public License.
+; credits: http://www.opsi.org/en/credits/
+
+include_append "%ScriptPath%\check_inno_exitcode.opsiscript"
+
+DefVar $PreviousVersion$
+DefVar $UninstallProgram$
+DefVar $ActDir$
+DefVar $TaskName$
+DefVar $UninstallPath$
+DefVar $ExitCode$
+
+DefStringList $TaskNameList$
+DefStringList $directory_folders$
+DefStringList $actual_version_string_list$
+DefStringList $previous_version_string_list$
+
+Set $TaskNameList$			= createStringList('Rgui.exe', 'R.exe')
+Set $directory_folders$ = getSubList(2 : -1, getOutStreamFromSection('dosbatch_dir'))
+
+for %task% in $TaskNameList$ do sub_killtask
+
+Message "Uninstalling " + $PrettyName$ + " ..."
+
+if ($KeepVersion$	= "remove all")
+  ; Iteration on directories
+  for %actual_directory% in $directory_folders$ do sub_uninstall_prog
+endif
+
+if ($KeepVersion$	= "keep major versions")
+	Set $PreviousVersion$ = ""
+	for %actual_directory% in $directory_folders$ do sub_uninstall_minor_versions
+endif
+	
+if ($KeepVersion$	= "keep all")
+  comment "all versions of R will be kept, none will be uninstalled"
+endif
+
+; ----------------------------------------------------------------
+; sub sections
+; ----------------------------------------------------------------
+[sub_killtask]
+Set $TaskName$ = "%task%"
+Killtask $TaskName$
+
+[sub_uninstall_prog]
+Set $ActDir$ = "%actual_directory%"
+Set $UninstallProgram$ = $InstallDir$ + $ActDir$ + "\unins000.exe"
+if (not($InstallDir$ = '')) and FileExists($UninstallProgram$)
+  comment "Uninstall program found, starting uninstall"
+  Winbatch_uninstall_inno
+  sub_check_exitcode
+endif
+if (not($InstallDir$ = '')) and (not($InstallDir$ = "not used"))
+  Set $UninstallPath$ = $InstallDir$
+  Files_uninstall
+endif
+
+[sub_uninstall_minor_versions]
+;split the version strings at the '.', because some might contain two instead of one digits
+Set $actual_version_string_list$ 		= splitString("%actual_directory%", ".")
+Set $previous_version_string_list$	= splitString($PreviousVersion$, ".")
+
+if (count($previous_version_string_list$) > "0")
+  if ( takeString(0,$previous_version_string_list$) = takeString(0,$actual_version_string_list$) )
+    if ( takeString(1,$previous_version_string_list$) = takeString(1,$actual_version_string_list$) )
+      Message "Uninstalling " + $PreviousVersion$ + "..." 
+			Set $UninstallProgram$ = $InstallDir$ + $PreviousVersion$ + "\unins000.exe"
+      if (not($InstallDir$ = '')) and FileExists($UninstallProgram$)
+        comment "Uninstall program found, starting uninstall"
+        Winbatch_uninstall_inno
+        sub_check_exitcode
+      endif
+      if (not($InstallDir$ = '')) and (not($InstallDir$ = "not used"))
+        Set $UninstallPath$ = $InstallDir$ + $PreviousVersion$ 
+        Files_uninstall
+      endif
+    endif
+  endif
+endif
+
+Set $PreviousVersion$ = "%actual_directory%"
+
+[Winbatch_uninstall_inno]
+"$UninstallProgram$" /SILENT /NORESTART
+
+[Files_uninstall]
+del -sf "$UninstallPath$\"
+
+[dosbatch_dir]
+dir "$InstallDir$" /b

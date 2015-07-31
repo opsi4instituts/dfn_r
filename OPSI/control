@@ -1,0 +1,57 @@
+[Package]
+version: 1
+depends: 
+incremental: False
+
+[Product]
+type: localboot
+id: dfn_r
+name: R for Windows
+description: R is a free software environment for statistical computing and graphics.
+advice: 
+version: 3.2.1or2.15.3
+priority: 0
+licenseRequired: False
+productClasses: 
+setupScript: setup.opsiscript
+uninstallScript: uninstall.opsiscript
+updateScript: 
+alwaysScript: 
+onceScript: 
+customScript: 
+userLoginScript: 
+
+[ProductProperty]
+type: unicode
+name: version
+multivalue: False
+editable: False
+description: Versions 3.x and 2.x are available for installation, since older plugins might only run on the 2.x version.
+values: ["2.x", "3.x", "both"]
+default: ["3.x"]
+
+[ProductProperty]
+type: unicode
+name: architecture
+multivalue: False
+editable: False
+description: Sets which architecture should be installed. For most users we would recommend using the `native' build, that is the 32-bit version on 32-bit Windows and the 64-bit version of 64-bit Windows.
+values: ["32bit", "64bit", "auto", "both"]
+default: ["auto"]
+
+[ProductProperty]
+type: unicode
+name: keep_version
+multivalue: False
+editable: False
+description: Distinguishes wether to keep or remove old versions. "Keep major versions" will keep the last 3.0.x, 3.1.x and 3.2.x to make sure a tested plugin setup isn't removed
+values: ["keep all", "keep major versions", "remove all"]
+default: ["keep major versions"]
+
+[Changelog]
+r (3.1.2-1) stable; urgency=low
+
+	* initial: created by opsi-setup-detector
+
+-- opsisetupdetector.exe <info@uib.de>  19.02.2015 12:49:54
+

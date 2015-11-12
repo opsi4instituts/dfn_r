@@ -1,6 +1,6 @@
 [Package]
-version: 1
-depends: 
+version: 2
+depends:
 incremental: False
 
 [Product]
@@ -9,10 +9,10 @@ id: dfn_r
 name: R for Windows
 description: R is a free software environment for statistical computing and graphics.
 advice: 
-version: 3.2.1or2.15.3
+version: 3.2.2or2.15.3
 priority: 0
 licenseRequired: False
-productClasses: 
+productClasses:
 setupScript: setup.opsiscript
 uninstallScript: uninstall.opsiscript
 updateScript: 
@@ -49,9 +49,9 @@ values: ["keep all", "keep major versions", "remove all"]
 default: ["keep major versions"]
 
 [Changelog]
+
 r (3.1.2-1) stable; urgency=low
 
 	* initial: created by opsi-setup-detector
 
 -- opsisetupdetector.exe <info@uib.de>  19.02.2015 12:49:54
-

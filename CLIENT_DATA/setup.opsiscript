@@ -77,7 +77,7 @@ Set $LicensePool$    		= "p_" + $ProductId$
 Set $MinimumSpace$    	= "326 MB"
 ; ----------------------------------------------------------------
 Set $PrettyName$				= "R"
-Set $Version_3$	  			= "3.2.1"
+Set $Version_3$	  			= "3.2.2"
 Set $Version_2$					= "2.15.3"
 Set $Setupfile_3$       = $PrettyName$ + "-" + $Version_3$ + "-win.exe"
 Set $Setupfile_2$       = $PrettyName$ + "-" + $Version_2$ + "-win.exe"
@@ -128,7 +128,7 @@ else
 	endif
 	
 	Set $Params$ = $Params$ + ",translations"
-	  
+	
 	;comment "Start setup program"
   ChangeDirectory "%SCRIPTPATH%"
   if ($version$ = "2.x") or  ($version$ = "both")
@@ -146,10 +146,11 @@ endif
 ; install sections
 ; ----------------------------------------------------------------
 [Winbatch_install_inno_2]
-"%ScriptPath%\$Setupfile_2$" + $Params$
+"%ScriptPath%\$Setupfile_2$" $Params$
 
 [Winbatch_install_inno_3]
-"%ScriptPath%\$Setupfile_3$" + $Params$
+"%ScriptPath%\$Setupfile_3$" $Params$
+; "%ScriptPath%\setup.exe" /sp- /silent /norestart /nocancel /SUPPRESSMSGBOXES
 
 ; ----------------------------------------------------------------
 [Sub_get_licensekey]

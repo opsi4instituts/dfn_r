@@ -37,68 +37,76 @@ ScriptErrorMessages=on
 TraceMode=off
 ; let started programs run in front of the winst window
 StayOnTop=False
- 
 
 [Actions]
-requiredWinstVersion >= "4.11.3.3"
+requiredWinstVersion >= "4.11.4.17"
 ;setLogLevel=9
+
+include_insert "insert_check_exit_code.opsiinc"
+include_insert "insert_get_licensekey.opsiinc"
 
 DefVar $LogDir$
 DefVar $ProductId$ 
-DefVar $LicenseRequired$
-DefVar $LicensePool$
 DefVar $MinimumSpace$
 DefVar $PrettyName$
 DefVar $Version_3$
-DefVar $Version_2$
 DefVar $Setupfile_3$ 
-DefVar $Setupfile_2$ 
 DefVar $Params$
 DefVar $INST_SystemType$
-DefVar $version$
 DefVar $architecture$
-;DefVar $UseCustomDir$
-;DefVar $CustomDir$
 DefVar $InstallDir$
 DefVar $KeepVersion$
-DefVar $LicenseKey$
 ;DefVar $CustomPackageInstallDir$	
 ;DefVar $UseCustomPackageInstallDir$	
+DefVar $CustomPostInstall$
+DefVar $CustomPostDeinstall$
+DefVar $PackageVersion$
+DefVar $TaskName$
+
+DefVar $PathToExe_64bit$
+DefVar $PathToExe_32bit$
+DefVar $Property_DesktopIcon$
+DefVar $DesktopIconName_32bit$
+DefVar $DesktopIconName_64bit$
+
+DefStringList $TaskNameList$
 
 Set $LogDir$ = "%SystemDrive%\tmp"
-
-include_append "%ScriptPath%\check_inno_exitcode.opsiscript"
 
 ; ----------------------------------------------------------------
 ; $ProductId$ is the name of the product in opsi, only lower letters, no umlauts, no white spaces, use '-' as a seperator
 Set $ProductId$      		= "r"
 Set $LicenseRequired$ 	= "false"
 Set $LicensePool$    		= "p_" + $ProductId$
-Set $MinimumSpace$    	= "326 MB"
+Set $MinimumSpace$    	= "350 MB"
 ; ----------------------------------------------------------------
+
+
 Set $PrettyName$				= "R"
-Set $Version_3$	  			= "3.2.2"
-Set $Version_2$					= "2.15.3"
+Set $PackageVersion$	  = takeString(1, splitString ("%installingProdVersion%","-"))
+Set $Version_3$	        = strPart("%installingProdVersion%", "1", calculate(strPos("%installingProdVersion%","-") + "-" + "1" ))
 Set $Setupfile_3$       = $PrettyName$ + "-" + $Version_3$ + "-win.exe"
-Set $Setupfile_2$       = $PrettyName$ + "-" + $Version_2$ + "-win.exe"
 Set $Params$						= "/VERYSILENT /COMPONENTS=main"
 
 Set $INST_SystemType$ 	= GetSystemType
-Set $version$				  	= GetProductProperty("version", "3.x")
 Set $architecture$			= GetProductProperty("architecture", "auto")
-;Set $UseCustomDir$			= GetProductProperty("use_custom_installation_directory", "False")
-;Set $CustomDir$ 				= GetProductProperty("custom_installation_directory", "%ProgramFiles64Dir%\R\")
-Set $KeepVersion$				= GetProductProperty("keep_Version", "keep all")
+
+Set $KeepVersion$				= GetProductProperty("keep_Version", "keep all older")
+Set $TaskNameList$			= createStringList('Rgui.exe', 'R.exe')
+
+Set $InstallDir$ 	      = "%ProgramFiles64Dir%\R\"
+Set $PathToExe_64bit$   = $InstallDir$ + "R-" + $Version_3$ + "\bin\x64\Rgui.exe"
+Set $PathToExe_32bit$   = $InstallDir$ + "R-" + $Version_3$ + "\bin\i386\Rgui.exe"
+Set $DesktopIconName_32bit$ = "R i386 " + $Version_3$
+Set $DesktopIconName_64bit$ = "R x64 " + $Version_3$
+
+;----------------------------------------------
+; Code for 
 ;Set $UseCustomPackageInstallDir$			= GetProductProperty("use_custom_package_install_directory", "False")
 ;Set $CustomPackageInstallDir$ 				= GetProductProperty("custom_package_install_directory", alsfasdf "%Username%\R\")
+;
 
-;if ($UseCustomDir$ = "True")
-;  Set $InstallDir$ = $CustomDir$ 	
-;  if ( (not ($InstallDir$ = '')) AND (not ($InstallDir$ = "%ProgramFiles64Dir%\R\")))
-;    Set $Params$ = $Params$ + ",'/DIR=\"$CustomDir$	\"'"
-;  endif
-;else
-  Set $InstallDir$ 	= "%ProgramFiles64Dir%\R\"
+
 ;endif
 
 if not(HasMinimumSpace ("%SystemDrive%", $MinimumSpace$))
@@ -109,9 +117,8 @@ else
   comment "Show product picture"
   ShowBitmap "%ScriptPath%\" + $ProductId$ + ".png" $PrettyName$ + " " + $Version_3$
 
-  comment "Start uninstall sub section"
-  Sub "%ScriptPath%\delsub.opsiscript"
-
+  for %task% in $TaskNameList$ do sub_killtask
+  
   Message "Installing " + $ProductId$ + " ..."
 	
   if $LicenseRequired$ = "true"
@@ -128,65 +135,89 @@ else
 	endif
 	
 	Set $Params$ = $Params$ + ",translations"
-	
+
 	;comment "Start setup program"
   ChangeDirectory "%SCRIPTPATH%"
-  if ($version$ = "2.x") or  ($version$ = "both")
-		Winbatch_install_inno_2
-		Sub_check_exitcode
-	endif
-	if ($version$ = "3.x") or ($version$ = "both")
+;  if ($version$ = "2.x") or ($version$ = "both")
+;		Winbatch_install_inno_2
+;		Sub_check_exitcode
+;	endif
+;	if ($version$ = "3.x") or ($version$ = "both")
 	   Winbatch_install_inno_3
 	   Sub_check_exitcode
-	endif	
-   	
+;	endif	
+  
+; The installer sets the installation user to the exectue path in the desktop icon and is therefore not working correctly with OPSI, nor with another logged in user as the one who installed it. We'll delete it and install new, if chosen.
+  Set $DesktopIconName_32bit$ = "R i386 " + $Version_3$ 
+  Set $DesktopIconName_64bit$ = "R x64 " + $Version_3$ 
+  LinkFolder_delete_wrong_install
+  Set $Property_DesktopIcon$ = GetProductProperty("DesktopIcon","True")
+  if $Property_DesktopIcon$ = "True"
+    if (($INST_SystemType$ = "x86 System") and ($architecture$ = "auto")) or ($architecture$ = "both") or ($architecture$ = "32bit")
+      LinkFolder_create_32bit
+	  endif
+	  if (($INST_SystemType$ = "64 Bit System") and ($architecture$ = "auto")) or ($architecture$ = "both") or ($architecture$ = "64bit")
+      LinkFolder_create_64bit
+	  endif
+  endif
+	
+  comment "Start uninstall sub section"
+  Sub "%ScriptPath%\delsub.opsiscript"
+
+  comment "include custom post install file"
+  set $CustomPostInstall$ = getProductProperty("custom-post-install","none")
+  if not ($CustomPostInstall$ = "none")
+	  if FileExists("%ScriptPath%\custom\" + $CustomPostInstall$)
+		  include_insert "%ScriptPath%\custom\" + $CustomPostInstall$
+	  endif
+  endif
 endif
 
 ; ----------------------------------------------------------------
 ; install sections
 ; ----------------------------------------------------------------
-[Winbatch_install_inno_2]
-"%ScriptPath%\$Setupfile_2$" $Params$
+;[Winbatch_install_inno_2]
+;"%ScriptPath%\$Setupfile_2$" $Params$
 
 [Winbatch_install_inno_3]
 "%ScriptPath%\$Setupfile_3$" $Params$
-; "%ScriptPath%\setup.exe" /sp- /silent /norestart /nocancel /SUPPRESSMSGBOXES
 
-; ----------------------------------------------------------------
-[Sub_get_licensekey]
-if opsiLicenseManagementEnabled
-   comment "License management is enabled and will be used"
+[sub_killtask]
+Set $TaskName$ = "%task%"
+Killtask $TaskName$
 
-   comment "Trying to get a license key"
-   Set $LicenseKey$ = demandLicenseKey ($LicensePool$)
-   ; If there is an assignment of exactly one licensepool to the product the following call is possible:
-   ; Set $LicenseKey$ = demandLicenseKey ("", $ProductId$)
-   ;
-   ; If there is an assignment of a license pool to a windows software id, it is possible to use:
-   ; DefVar $WindowsSoftwareId$
-   ; $WindowsSoftwareId$ = "..."
-   ; Set $LicenseKey$ = demandLicenseKey ("", "", $WindowsSoftwareId$)
+[LinkFolder_delete_wrong_install]
+; delete an shortcut to the installed exe on AllUsers desktop:
+set_basefolder common_desktopdirectory
+set_subfolder ""
+delete_element $DesktopIconName_32bit$
+delete_element $DesktopIconName_64bit$
+; delete a folder from AllUsers startmenu:
+;set_basefolder common_programs
+;delete_subfolder $ProductId$
 
-   DefVar $ServiceErrorClass$
-   set $ServiceErrorClass$ = getLastServiceErrorClass
-   comment "Error class: " + $ServiceErrorClass$
-   
-   if $ServiceErrorClass$ = "None"
-      comment "Everything fine, we got the license key '" + $LicenseKey$ + "'"
-   else
-      if $ServiceErrorClass$ = "LicenseConfigurationError"
-         LogError "Fatal: license configuration must be corrected"
-         LogError getLastServiceErrorMessage
-         isFatalError
-      else 
-         if $ServiceErrorClass$ = "LicenseMissingError"
-            LogError "Fatal: required license is not supplied"
-            isFatalError
-         endif
-      endif
-   endif
-else
-   LogError "Fatal: license required, but license management not enabled"
-   isFatalError
-endif
+[LinkFolder_create_32bit]
+; create an shortcut to the installed exe on AllUsers desktop:
+set_basefolder common_desktopdirectory
+set_subfolder ""
+set_link
+       name: $DesktopIconName_32bit$
+       target: $PathToExe_32bit$
+       parameters:
+       working_dir: "C:\Users\%USERPROFILE%\Documents"
+       icon_file:
+       icon_index:
+end_link
 
+[LinkFolder_create_64bit]
+; create an shortcut to the installed exe on AllUsers desktop:
+set_basefolder common_desktopdirectory
+set_subfolder ""
+set_link
+       name: $DesktopIconName_64bit$
+       target: $PathToExe_64bit$
+       parameters:
+       working_dir: "C:\Users\%USERPROFILE%\Documents"
+       icon_file:
+       icon_index:
+end_link

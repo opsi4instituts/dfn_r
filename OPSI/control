@@ -1,6 +1,6 @@
 [Package]
-version: 2
-depends:
+version: 1
+depends: 
 incremental: False
 
 [Product]
@@ -9,10 +9,10 @@ id: dfn_r
 name: R for Windows
 description: R is a free software environment for statistical computing and graphics.
 advice: 
-version: 3.2.2or2.15.3
+version: 3.2.3
 priority: 0
 licenseRequired: False
-productClasses:
+productClasses: 
 setupScript: setup.opsiscript
 uninstallScript: uninstall.opsiscript
 updateScript: 
@@ -20,15 +20,6 @@ alwaysScript:
 onceScript: 
 customScript: 
 userLoginScript: 
-
-[ProductProperty]
-type: unicode
-name: version
-multivalue: False
-editable: False
-description: Versions 3.x and 2.x are available for installation, since older plugins might only run on the 2.x version.
-values: ["2.x", "3.x", "both"]
-default: ["3.x"]
 
 [ProductProperty]
 type: unicode
@@ -45,13 +36,37 @@ name: keep_version
 multivalue: False
 editable: False
 description: Distinguishes wether to keep or remove old versions. "Keep major versions" will keep the last 3.0.x, 3.1.x and 3.2.x to make sure a tested plugin setup isn't removed
-values: ["keep all", "keep major versions", "remove all"]
+values: ["keep all older", "keep major versions", "remove all older"]
 default: ["keep major versions"]
 
-[Changelog]
+[ProductProperty]
+type: unicode
+name: custom-post-install
+multivalue: False
+editable: False
+description: Define filename for include script in custom directory after installation
+values: ["none", "post-install.opsiinc"]
+default: ["none"]
 
+[ProductProperty]
+type: unicode
+name: custom-post-deinstall
+multivalue: False
+editable: False
+description: Define filename for include script in custom directory after deinstallation
+values: ["none", "post-deinstall.opsiinc"]
+default: ["none"]
+
+[ProductProperty]
+type: bool
+name: desktopicon
+description: generate or delete desktop icon
+default: True
+
+[Changelog]
 r (3.1.2-1) stable; urgency=low
 
-	* initial: created by opsi-setup-detector
+	* initial: created by Eric Esser, Wissenschaftszentrum Berlin
 
--- opsisetupdetector.exe <info@uib.de>  19.02.2015 12:49:54
+-- Eric Esser <eric.esser@wzb.eu>  19.02.2015 12:49:54
+

@@ -6,7 +6,7 @@
 [Actions]
 requiredWinstVersion >= "4.11.3.3"
 
-include_append "%ScriptPath%\check_inno_exitcode.opsiscript"
+include_insert "insert_check_exit_code.opsiinc"
 
 DefVar $LogDir$
 DefVar $ProductId$
@@ -18,6 +18,13 @@ DefVar $KeepVersion$
 DefVar $LicenseRequired$
 DefVar $LicensePool$
 DefVar $PrettyName$
+DefVar $CustomPostDeinstall$
+DefVar $TaskName$
+
+DefStringList $TaskNameList$
+DefStringList $directory_folders$
+DefStringList $actual_version_string_list$
+DefStringList $previous_version_string_list$
 
 DefStringList $directory_folders$
 DefStringList $dirty_directory_folders$
@@ -32,7 +39,7 @@ Set $LogDir$ 				= "%SystemDrive%\tmp"
 ;endif
 
 ;just to make sure everything is removed
-Set $KeepVersion$ 	= "remove all"
+Set $KeepVersion$ 	= "remove everything"
 
 ; ----------------------------------------------------------------; ----------------------------------------------------------------
 ; - Please check the following values                             -
@@ -40,10 +47,13 @@ Set $KeepVersion$ 	= "remove all"
 Set $ProductId$               = "r"
 Set $LicenseRequired$         = "false"
 Set $LicensePool$             = "p_" + $ProductId$
+Set $TaskNameList$			      = createStringList('Rgui.exe', 'R.exe')
 ; ----------------------------------------------------------------
 
 comment "Show product picture"
 ShowBitmap "%ScriptPath%\" + $ProductId$ + ".png" $PrettyName$
+
+for %task% in $TaskNameList$ do sub_killtask
 
 comment "Start uninstall sub section"
 Sub "%ScriptPath%\delsub.opsiscript"
@@ -51,6 +61,14 @@ Sub "%ScriptPath%\delsub.opsiscript"
 if $LicenseRequired$ = "true"
    comment "Licensing required, free license used"
    Sub_free_license
+endif
+
+comment "include custom post deinstall file"
+set $CustomPostDeinstall$ = getProductProperty("custom-post-deinstall","none")
+if not ($CustomPostDeinstall$ = "none")
+	if FileExists("%ScriptPath%\custom\" + $CustomPostDeinstall$)
+		include_insert "%ScriptPath%\custom\" + $CustomPostDeinstall$
+	endif
 endif
 
 ;-----------------------------------------------------
@@ -69,3 +87,6 @@ Set $result$ = FreeLicense($LicensePool$)
 ; $WindowsSoftwareId$ = "..."
 ; set $result$ = FreeLicense("", "", $WindowsSoftwareId$)
 
+[sub_killtask]
+Set $TaskName$ = "%task%"
+Killtask $TaskName$

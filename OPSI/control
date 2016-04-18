@@ -9,7 +9,7 @@ id: dfn_r
 name: R for Windows
 description: R is a free software environment for statistical computing and graphics.
 advice: 
-version: 3.2.4
+version: 3.2.5
 priority: 0
 licenseRequired: False
 productClasses: 

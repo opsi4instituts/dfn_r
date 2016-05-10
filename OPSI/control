@@ -9,7 +9,7 @@ id: dfn_r
 name: R for Windows
 description: R is a free software environment for statistical computing and graphics.
 advice: 
-version: 3.2.5
+version: 3.3.0
 priority: 0
 licenseRequired: False
 productClasses: 
@@ -43,7 +43,7 @@ default: ["keep major versions"]
 type: unicode
 name: custom-post-install
 multivalue: False
-editable: False
+editable: True
 description: Define filename for include script in custom directory after installation
 values: ["none", "post-install.opsiinc"]
 default: ["none"]
@@ -52,7 +52,7 @@ default: ["none"]
 type: unicode
 name: custom-post-deinstall
 multivalue: False
-editable: False
+editable: True
 description: Define filename for include script in custom directory after deinstallation
 values: ["none", "post-deinstall.opsiinc"]
 default: ["none"]
@@ -69,4 +69,3 @@ r (3.1.2-1) stable; urgency=low
 	* initial: created by Eric Esser, Wissenschaftszentrum Berlin
 
 -- Eric Esser <eric.esser@wzb.eu>  19.02.2015 12:49:54
-

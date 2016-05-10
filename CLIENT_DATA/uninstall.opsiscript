@@ -15,8 +15,6 @@ DefVar $InstallDir$
 DefVar $KeepVersion$	
 ;DefVar $CustomPath$
 
-DefVar $LicenseRequired$
-DefVar $LicensePool$
 DefVar $PrettyName$
 DefVar $CustomPostDeinstall$
 DefVar $TaskName$
@@ -44,9 +42,7 @@ Set $KeepVersion$ 	= "remove everything"
 ; ----------------------------------------------------------------; ----------------------------------------------------------------
 ; - Please check the following values                             -
 ; ----------------------------------------------------------------
-Set $ProductId$               = "r"
-Set $LicenseRequired$         = "false"
-Set $LicensePool$             = "p_" + $ProductId$
+Set $ProductId$               = "dfn_r"
 Set $TaskNameList$			      = createStringList('Rgui.exe', 'R.exe')
 ; ----------------------------------------------------------------
 
@@ -58,10 +54,6 @@ for %task% in $TaskNameList$ do sub_killtask
 comment "Start uninstall sub section"
 Sub "%ScriptPath%\delsub.opsiscript"
 
-if $LicenseRequired$ = "true"
-   comment "Licensing required, free license used"
-   Sub_free_license
-endif
 
 comment "include custom post deinstall file"
 set $CustomPostDeinstall$ = getProductProperty("custom-post-deinstall","none")
@@ -73,19 +65,6 @@ endif
 
 ;-----------------------------------------------------
 
-[Sub_free_license]
-comment "License management is enabled and will be used"
-
-comment "Trying to free license used for the product"
-DefVar $result$
-Set $result$ = FreeLicense($LicensePool$)
-; If there is an assignment of a license pool to the product, it is possible to use
-; Set $result$ = FreeLicense("", $ProductId$)
-;
-; If there is an assignment of a license pool to a windows software id, it is possible to use
-; DefVar $WindowsSoftwareId$
-; $WindowsSoftwareId$ = "..."
-; set $result$ = FreeLicense("", "", $WindowsSoftwareId$)
 
 [sub_killtask]
 Set $TaskName$ = "%task%"

@@ -130,10 +130,11 @@ else
 	comment "Start setup program"
   Message "Installing R..."
   ChangeDirectory "%SCRIPTPATH%"
+  Registry_SetUserdocs /AllNtUserDats
   Winbatch_install_inno_3
   Sub_check_exitcode
   
-  Registry_SetUserdocs /AllNtUserDats
+
 
 ; The installer sets the installation user to the exectue path in the desktop icon and is therefore not working correctly with OPSI, nor with another logged in user as the one who installed it. We'll delete it and install new, if chosen.
   Set $DesktopIconName_32bit$ = "R i386 " + $Version_3$ 

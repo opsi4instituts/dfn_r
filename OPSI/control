@@ -9,7 +9,7 @@ id: dfn_r
 name: R for Windows
 description: R is a free software environment for statistical computing and graphics.
 advice: 
-version: 3.4.1
+version: 3.4.2
 priority: 0
 licenseRequired: False
 productClasses: 
@@ -64,6 +64,12 @@ description: generate or delete desktop icon
 default: True
 
 [Changelog]
+dfn_r (3.4.2-1) stable; urgency=low
+
+Update auf 3.4.2., Exe getauscht.
+
+ -- Eric Esser <eric.esser@wzb.eu>  Wed, 04 Oct 2017 13:25:16 +0000
+
 r (3.1.2-1) stable; urgency=low
 
 	* initial: created by Eric Esser, Wissenschaftszentrum Berlin
